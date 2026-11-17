@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patient RP – Crimson Island</title>
+<style>
+:root{--bg:#fff;--fg:#111;--mut:#555;--card:#f3f4f6;--line:#d1d5db;--acc:#b91c1c;--accfg:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b0c;--fg:#f5f5f5;--mut:#a3a3a3;--card:#1a1a1c;--line:#3a3a3d;--acc:#ef4444;--accfg:#111}}
+:root[data-theme="dark"]{--bg:#0b0b0c;--fg:#f5f5f5;--mut:#a3a3a3;--card:#1a1a1c;--line:#3a3a3d;--acc:#ef4444;--accfg:#111}
+html{color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:0 0 10px}
+h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:20px 0 8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:2px solid var(--line);background:var(--bg);border-radius:999px;padding:8px 14px;font-weight:600}
+.chip.on{border-color:var(--acc);background:var(--acc);color:var(--accfg)}
+.btn{border:2px solid var(--fg);background:var(--bg);border-radius:12px;padding:12px 16px;font-weight:700}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--accfg)}
+.card{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px}
+.id{font-size:26px;font-weight:800;line-height:1.15}
+.sub{color:var(--mut);margin-top:4px}
+.dice{display:flex;gap:12px;align-items:center}
+.die{min-width:96px;height:96px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;color:#fff;background:#555}
+.hist span{display:inline-block;min-width:38px;text-align:center;border-radius:8px;padding:3px 6px;color:#fff;font-weight:700;font-size:14px}
+.grid{display:grid;gap:8px}
+.rv{width:100%;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 14px;display:block}
+.rv b{display:block}
+.rv .hint{color:var(--mut);font-size:14px}
+.rv.open{border-color:var(--fg)}
+.rv .val{margin-top:4px}
+.note{font-size:13px;color:var(--mut);margin-top:4px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:5}
+.sheet>div{background:var(--bg);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px))}
+.pk{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.pk .t{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:8px;text-align:center}.pk .ic{background:#fff;border-radius:8px;padding:4px;line-height:0}.pk small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Patient RP · Crimson Island</h1>
+<div class="row" id="tabs"></div>
+<div id="view"></div>
+</main>
+<div class="sheet hide" id="sheet"><div>
+<h1>Numériser un patient</h1>
+<p class="sub">Sexe du patient :</p>
+<div class="row"><button class="btn pri" data-s="H">Homme</button><button class="btn pri" data-s="F">Femme</button><button class="btn pri" data-s="A">Autre</button></div>
+<p style="margin-top:14px"><button class="btn" id="cancel">Annuler</button></p>
+</div></div>
+<script>
+const R=a=>a[Math.floor(Math.random()*a.length)];
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=(a,n)=>{const c=[...a],o=[];while(n-->0&&c.length)o.push(c.splice(ri(0,c.length-1),1)[0]);return o};
+const FF=["Léa","Inès","Mariana","Siobhan","Ingrid","Camille","Aïcha","Elena","Marta","Noor","Freya","Odile","Ana","Chiara","Yasmine","Maëlle","Katarina","Solveig","Maëva","Lucía","Nora","Eilidh","Thérèse","Clara","Amira","Ottilie","Joana","Margaux","Daria","Maeve"];
+const FM=["Mathis","Tiago","Liam","Mateo","Henrik","Yannick","Karim","Luca","Jonas","Emre","Sébastien","Rafael","Declan","Anselm","Nils","Étienne","Omar","Piotr","Julien","Gaspard","Cillian","Santiago","Mattéo","Anders","Théo","Idris","Bastien","Diego","Fergus","Léon"];
+const LN=["Tremblay","Beaulieu","Moreau","Silva","Ferreira","O’Connell","Lindqvist","Rossi","Brandt","Haddad","Whitlock","Alvarez","Nakamura","Kowalski","Dubois","Laurent","Mercier","Santos","Murphy","Jansen","Bianchi","Müller","Lefèvre","Moreno","Larsen","Petrović","Bouchard","Gallagher","Navarro","Ibarra","Kaya","Fontaine","Bergström","Marchetti","Costa","Delacroix","Pereira","Ndiaye","Vasseur","Quinn","Hart","Roy","Salazar","Kessler"];
+const HOME=["Port-Crimson","Saint-Elwin","Baie-des-Brumes","Northcliff","Havre-Rouge","Kelsey Point","Pointe-aux-Goélands","Marlow Harbour","Fairhaven","Cap-Sorrel","Les Hauts-de-Tourbe","Greywater","Anse-Salée","Vallée-des-Pommiers"];
+const JOBS=["Équipage de chalutier","Maraîchage","Conserverie (ligne de production)","Soins infirmiers","Chantier naval (soudure)","Enseignement","Restauration","Électricité du bâtiment","Transport routier","Élevage ovin","Tourisme / guidage","Informatique en télétravail","Menuiserie","Commerce de proximité","Mécanique","Maintenance d’éoliennes","Aquaculture","Artisanat d’art","Vergers et cidrerie","Criée au poisson"];
+const ALL=["Aucune connue","Aucune connue","Aucune connue","Pénicilline","Arachides","Latex","Pollens","Produit de contraste iodé","AINS (ibuprofène…)","Crustacés","Piqûres de guêpe","Œufs"];
+const MEDC=["Metformine","Ramipril","Atorvastatine","Lévothyroxine","Salbutamol (au besoin)","Oméprazole","Sertraline","Apixaban","Paracétamol (au besoin)","Amlodipine","Insuline","Bisoprolol","Furosémide","Contraception orale"];
+const HIST=["Hypertension","Diabète de type 2","Asthme","Appendicectomie","Fracture ancienne (poignet)","Dépression","Épilepsie","BPCO","Infarctus il y a quelques années","AVC","Hernie discale","Insuffisance cardiaque","Hypothyroïdie","Calculs rénaux","Migraines","Apnée du sommeil","Cancer en rémission"];
+const MEAL=["Petit-déjeuner","Déjeuner","Dîner","Simple collation","Rien depuis hier"];
+const FOOD=["tartines et café","poisson grillé et riz","soupe de la mer","sandwich au thon","pâtes et salade","ragoût de bœuf","pomme et barre de céréales","œufs brouillés","fish and chips","poulet rôti et pommes de terre","gâteau et thé"];
+const RISK=["Tabagisme","Alcool régulier","Sédentarité","Surpoids","Stress chronique","Antécédents familiaux cardiaques","Travail en hauteur / en mer","Mauvais sommeil","Consommation de drogues récréatives","Isolement social","Exposition aux produits chimiques"];
+const CTX=[[0,"Chute de vélo, plaie à la tête"],[0,"Difficultés respiratoires, sifflements"],[0,"Fièvre élevée et léthargie"],[0,"Brûlure par eau chaude"],[0,"Ingestion d’un produit ménager"],[0,"Chute d’un arbre, douleur au bras"],[18,"Douleur thoracique oppressante"],[18,"Malaise sur un quai du port"],[18,"Main prise dans un treuil de bateau, plaie profonde"],[18,"Hameçon planté dans la main"],[18,"Accident de tracteur, jambe coincée"],[18,"Brûlure chimique à la conserverie"],[18,"Chute d’échafaudage au chantier naval"],[18,"Hypothermie après chute en mer"],[18,"Intoxication alimentaire sévère"],[18,"Crise convulsive"],[18,"Crise d’angoisse avec dyspnée"],[18,"Coup de chaleur en pleine récolte"],[18,"Accident de la route, douleur cervicale"],[65,"Chute à domicile, douleur à la hanche"],[65,"Confusion brutale"],[65,"Essoufflement croissant depuis 3 jours"],[65,"Faiblesse d’un côté du corps"],[65,"Douleur abdominale intense"]];
+const MONTHS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+let pts=[],cur=-1,hist=[],die=null;
+function genPatient(s){
+ const fem=s==="F"?true:s==="H"?false:Math.random()<.5;
+ const first=R(fem?FF:FM),last=R(LN);
+ let age=Math.round((ri(1,95)+ri(1,95))/2);
+ const d=new Date();d.setFullYear(d.getFullYear()-age);d.setDate(d.getDate()-ri(0,364));
+ const dob=d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear();
+ let w;
+ if(age<=12)w=10+(age-1)*3.2+ri(-2,3);else if(age<=17)w=45+(age-13)*5+ri(-6,8);else w=(s==="H"?78:s==="F"?65:71)+ri(-16,22);
+ w=Math.max(8,Math.round(w));
+ const home=homePick();let jobs;
+ if(home===SDF&&age>=16)jobs=[R(["Sans emploi","Inconnu (ne veut pas le dire)","Petits boulots occasionnels"])];
+ else if(age<16)jobs=["Élève"];
+ else if(age<23&&Math.random()<.6)jobs=[R(["Étudiant(e)","Apprenti(e) – "+R(JOBS)])];
+ else if(Math.random()<.08)jobs=["Inconnu (ne veut pas le dire)"];
+ else if(age>=65)jobs=["Retraité(e) – ancien(ne) : "+R(JOBS)];
+ else jobs=Math.random()<.28?pick(JOBS,2):[R(JOBS)];
+ let spouse;
+ if(age<18)spouse="Sans objet (mineur)";
+ else{const st=R(["Célibataire","Célibataire","Marié(e)","Marié(e)","En couple (non marié)","Divorcé(e)"]);
+  spouse=age>=70&&Math.random()<.4?"Veuf / veuve":st;
+  if(/Marié|couple/.test(spouse))spouse+=" – "+R(fem?FM:FF)+" "+(Math.random()<.5?last:R(LN));}
+ const nm=age<18?0:age<40?ri(0,2):ri(1,5);
+ const meds=nm?pick(MEDC,nm).join(", "):"Aucun traitement";
+ const nh=age<18?ri(0,1):age<40?ri(0,2):ri(1,4);
+ const history=nh?pick(HIST,nh).join(", "):"Rien de notable";
+ const ok=CTX.filter(c=>age>=c[0]||(c[0]===0&&age<18));
+ const kid=CTX.filter(c=>c[0]===0),adult=CTX.filter(c=>c[0]>0&&c[0]<=age);
+ const ctx=(age<18?R(kid):R(adult))[1];
+ return {id:Date.now()+Math.random(),s,first,last,age,dob,home,spouse,jobs:jobs.join(" ; "),w,
+  pockets:null,saved:false,allergies:pick(ALL,Math.random()<.2?2:1).filter((v,i,a)=>a.indexOf(v)===i).join(", "),meds,history,
+  meal:R(MEAL)+" il y a "+ri(1,14)+" h : "+R(FOOD),risks:pick(RISK,ri(0,3)).join(", ")||"Aucun évident",open:{}};
+}
+const SDF="Aucun (SDF)";
+const HL=[["East side, Crimson city",5],["West side, Crimson city",5],["South, Crimson city",5],["North, Crimson city",5],["Crimson city",6],["Beachtown",5],["East, Beachtown",4],["South, Beachtown",4],["Cod town",5],["East, Cod town",4],["West, Cod town",4],["Suburbs East",5],["Suburbs West",5],["City Marina",3],["Port",0.3],[SDF,3],["Motel Beach town",2],["Motel Cod town",2]];
+function homePick(){let r=Math.random()*HL.reduce((s,h)=>s+h[1],0);for(const h of HL){if((r-=h[1])<=0)return h[0]}return HL[0][0]}
+const S=b=>'<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'+b+'</svg>';
+const IC={
+wallet:S('<rect x="7" y="16" width="50" height="34" rx="5" fill="#b45309"/><path d="M7 25h50"/><rect x="39" y="31" width="18" height="11" rx="3" fill="#fde68a"/><circle cx="45" cy="36.5" r="1.6" fill="#111"/>'),
+id:S('<rect x="6" y="14" width="52" height="36" rx="4" fill="#bfdbfe"/><circle cx="22" cy="30" r="6" fill="#fff"/><path d="M12 44c2-7 18-7 20 0"/><path d="M38 26h14M38 33h14M38 40h9"/>'),
+phone:S('<rect x="19" y="6" width="26" height="52" rx="5" fill="#374151"/><rect x="22" y="12" width="20" height="34" fill="#93c5fd"/><circle cx="32" cy="52" r="2" fill="#fff"/>'),
+keys:S('<circle cx="18" cy="20" r="10" fill="#e5e7eb"/><circle cx="18" cy="20" r="3" fill="#fff"/><path d="M26 28l28 26M44 46l6-6M50 52l6-6"/>'),
+coins:S('<circle cx="24" cy="38" r="14" fill="#fcd34d"/><circle cx="42" cy="26" r="14" fill="#fde68a"/><path d="M42 20v12M38 24h8"/>'),
+lighter:S('<rect x="22" y="26" width="20" height="32" rx="3" fill="#dc2626"/><rect x="22" y="22" width="20" height="8" fill="#9ca3af"/><path d="M32 20c-6-6 0-9 0-14 6 4 6 10 0 14z" fill="#fb923c"/>'),
+cigs:S('<rect x="16" y="14" width="32" height="42" rx="3" fill="#fff"/><rect x="16" y="14" width="32" height="14" fill="#dc2626"/><path d="M24 40h16M24 46h10"/>'),
+gum:S('<rect x="14" y="20" width="36" height="24" rx="3" fill="#34d399"/><path d="M14 32h36M22 20v24"/>'),
+tissues:S('<rect x="12" y="24" width="40" height="28" rx="4" fill="#bae6fd"/><path d="M26 24c0-8 6-14 10-14M34 24c0-6 8-8 10-6"/>'),
+earbuds:S('<circle cx="20" cy="18" r="7" fill="#fff"/><circle cx="44" cy="18" r="7" fill="#fff"/><path d="M20 25c0 20 10 30 12 30s12-10 12-30"/>'),
+knife:S('<rect x="10" y="30" width="44" height="12" rx="6" fill="#dc2626"/><path d="M14 30c10-14 28-14 40-8" fill="#d1d5db"/><circle cx="46" cy="36" r="2" fill="#fff"/>'),
+ticket:S('<path d="M8 18H56V26a5 5 0 0 0 0 12V46H8V38a5 5 0 0 0 0-12Z" fill="#fde68a"/><path d="M40 18v28" stroke-dasharray="3 4"/>'),
+pills:S('<rect x="18" y="20" width="28" height="38" rx="4" fill="#f59e0b"/><rect x="16" y="10" width="32" height="12" rx="3" fill="#fff"/><rect x="22" y="30" width="20" height="16" fill="#fff"/>'),
+inhaler:S('<rect x="20" y="6" width="20" height="34" rx="4" fill="#60a5fa"/><rect x="20" y="36" width="34" height="14" rx="4" fill="#fff"/>'),
+bottle:S('<path d="M26 6h12v12l6 8v30H20V26l6-8z" fill="#92400e"/><rect x="22" y="34" width="20" height="14" fill="#fff"/>'),
+glasses:S('<circle cx="20" cy="36" r="11" fill="#e0f2fe"/><circle cx="44" cy="36" r="11" fill="#e0f2fe"/><path d="M31 34h2M9 32L6 22M55 32l3-10"/>'),
+bag:S('<path d="M14 20h36l4 36H10z" fill="#e5e7eb"/><path d="M22 20c0-12 20-12 20 0"/>'),
+cup:S('<path d="M16 16h32l-4 40H20z" fill="#fff"/><rect x="14" y="10" width="36" height="8" rx="2" fill="#a16207"/><path d="M17 30h30"/>')};
+function genPockets(p){
+ const a=p.age,sdf=p.home===SDF,motel=/^Motel/.test(p.home),it=[];
+ if(sdf){
+  if(Math.random()<.25)it.push(["wallet","Portefeuille presque vide",ri(0,9)+" $ en billets froissés"]);else it.push(["coins","Monnaie",ri(1,12)+" $ en pièces"]);
+  if(Math.random()<.35)it.push(["phone","Téléphone","Écran fissuré, batterie "+ri(1,40)+" %"]);
+  it.push(...pick([["bag","Sac plastique","Quelques affaires roulées dedans"],["cup","Gobelet","Gobelet en carton, pour la quête"],["lighter","Briquet","Presque vide"],["cigs","Paquet de cigarettes","Il en reste "+ri(1,6)],["knife","Canif","Lame émoussée"],["bottle","Bouteille","Alcool bon marché, entamée"],["tissues","Mouchoirs","Paquet usagé"],["ticket","Carte du foyer","Foyer d’accueil de nuit, périmée"]],ri(3,5)));
+ }else{
+  if(a>=15&&Math.random()<.92){it.push(["wallet","Portefeuille",ri(2,400)+" $ en espèces, "+ri(1,4)+" cartes"]);it.push(["id","Pièce d’identité",p.first+" "+p.last+" · né(e) le "+p.dob])}
+  if(Math.random()<(a>=15?.93:a>=8?.5:.1))it.push(["phone","Téléphone","Batterie "+ri(3,100)+" %"+(Math.random()<.2?", écran fissuré":"")]);
+  if(motel)it.push(["keys","Clé de chambre",p.home+", chambre "+ri(1,30)]);
+  else if(a>=16&&Math.random()<.88)it.push(["keys","Clés",ri(2,6)+" clés, dont celles de la maison"]);
+  const ex=[["lighter","Briquet",""],["gum","Chewing-gum","Paquet entamé"],["tissues","Mouchoirs",""],["coins","Monnaie",ri(1,9)+" $ en pièces"],["ticket","Ticket",R(["Ticket de bus","Ticket de caisse froissé","Billet de ferry"])]];
+  if(a>=16)ex.push(["cigs","Paquet de cigarettes","Il en reste "+ri(1,15)],["earbuds","Écouteurs","Filaires, emmêlés"]);
+  if(a>=14)ex.push(["knife","Canif","Couteau de poche"]);
+  if(a>=18)ex.push(["bottle","Flasque","À moitié pleine"]);
+  if(a>=40)ex.push(["glasses","Lunettes","Lunettes de lecture"]);
+  it.push(...pick(ex,ri(2,4)));
+  if(p.meds!=="Aucun traitement"&&Math.random()<.6)it.push(["pills","Boîte de médicaments","Étiquette à moitié effacée"]);
+  if(/Salbutamol/.test(p.meds))it.push(["inhaler","Inhalateur","Il reste peu de doses"]);
+ }
+ return it;
+}
+function pocketsHtml(p){
+ if(!p.pockets)p.pockets=genPockets(p);
+ return '<div class="pk">'+p.pockets.map(x=>'<div class="t"><div class="ic">'+IC[x[0]]+'</div><b>'+x[1]+'</b>'+(x[2]?'<small>'+x[2]+'</small>':'')+'</div>').join("")+'</div>';
+}
+const K="rp-patients";
+function persist(){try{localStorage.setItem(K,JSON.stringify(pts.filter(p=>p.saved)))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(K)||"[]");if(Array.isArray(d)){pts=d;cur=pts.length-1}}catch(e){}}
+const SX={H:"Homme",F:"Femme",A:"Autre / non précisé"};
+const col=v=>"hsl("+Math.round(v*1.2)+",68%,36%)";
+function reveal(p,k,label,val,extra){
+ const o=p.open[k];
+ return '<button class="rv'+(o?" open":"")+'" data-k="'+k+'"><b>'+label+'</b>'+(o?'<div class="val">'+val+'</div>'+(extra||""):'<span class="hint">Appuyer pour révéler</span>')+'</button>';
+}
+function render(){persist();
+ const t=document.getElementById("tabs");
+ t.innerHTML=pts.map((p,i)=>'<button class="chip'+(i===cur?" on":"")+'" data-i="'+i+'">'+p.first+'</button>').join("")+'<button class="chip" id="add">Numériser</button>';
+ const v=document.getElementById("view"),p=pts[cur];
+ if(!p){v.innerHTML='<p class="sub">Aucun patient en face de vous. Appuyez sur « Numériser » pour scanner un patient.</p>';return}
+ const dieHtml=die===null?"–":die;
+ v.innerHTML=
+ '<h2>Identité</h2><div class="card"><div class="id">'+p.first+' '+p.last+'</div><div class="sub">Sexe : '+SX[p.s]+'</div></div>'+
+ '<h2>Dé de 100</h2><div class="card dice"><div class="die" id="die" style="background:'+(die===null?"#555":col(die))+'">'+dieHtml+'</div>'+
+ '<div><button class="btn pri" id="roll">Lancer</button><div class="hist" style="margin-top:8px">'+hist.slice(-8).map(x=>'<span style="background:'+col(x)+'">'+x+'</span>').join(" ")+'</div></div></div>'+
+ '<h2>Demander au patient</h2><div class="grid">'+
+ reveal(p,"all","Allergies ?",p.allergies)+reveal(p,"med","Médicaments ?",p.meds)+reveal(p,"hist","Passé médical ?",p.history)+reveal(p,"meal","Dernier repas ?",p.meal)+reveal(p,"risk","Facteurs de risque ?",p.risks)+'</div>'+
+ '<h2>Données du patient</h2><div class="grid">'+
+ reveal(p,"dob","Date de naissance",p.dob+" ("+p.age+" ans)")+reveal(p,"home","Lieu de domicile",p.home)+reveal(p,"sp","Conjoint",p.spouse)+reveal(p,"job","Métier(s)",p.jobs)+
+ reveal(p,"w","Poids","≈ "+p.w+" kg",'<div class="note">Valeur approximative, estimée à vue.</div>')+reveal(p,"pk","Fouiller ses affaires",p.open.pk?pocketsHtml(p):"")+'</div>'+
+ '<p class="row" style="margin-top:20px"><button class="btn pri" id="save">'+(p.saved?"✓ Sauvegardé":"Sauvegarder")+'</button><button class="btn" id="hideall">Tout masquer</button><button class="btn" id="del">Supprimer ce patient</button></p>';
+}
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.id==="add"){document.getElementById("sheet").classList.remove("hide")}
+ else if(b.id==="cancel"){document.getElementById("sheet").classList.add("hide")}
+ else if(b.dataset.s){pts.push(genPatient(b.dataset.s));cur=pts.length-1;document.getElementById("sheet").classList.add("hide");render()}
+ else if(b.dataset.i){cur=+b.dataset.i;render()}
+ else if(b.dataset.k){const p=pts[cur];p.open[b.dataset.k]=!p.open[b.dataset.k];render()}
+ else if(b.id==="roll"){
+  let n=0;const el=document.getElementById("die"),iv=setInterval(()=>{const x=ri(1,100);el.textContent=x;el.style.background=col(x);if(++n>8){clearInterval(iv);die=ri(1,100);hist.push(die);render()}},60)}
+ else if(b.id==="save"){pts[cur].saved=!pts[cur].saved;render()}
+ else if(b.id==="hideall"){pts[cur].open={};render()}
+ else if(b.id==="del"){pts.splice(cur,1);cur=pts.length-1;render()}
+});
+load();render();
+</script>
+</body>
+</html>
